@@ -417,26 +417,23 @@
 
 /*
  * Enter/exit motion for Base UI popups (they set data-starting-style /
- * data-ending-style for one frame). Entering rides the spatial spring from the
- * popup's transform origin; exiting is a quick accelerate fade.
+ * data-ending-style for one frame). Entering is a short eased grow from the
+ * popup's transform origin, with no spring overshoot; exiting is a quick
+ * accelerate fade.
  */
 @utility motion-popup {
   transform-origin: var(--transform-origin, center);
-  transition-property: opacity, scale, translate;
-  transition-duration:
-    var(--md-sys-motion-spring-default-effects-duration),
-    var(--md-sys-motion-spring-fast-spatial-duration);
-  transition-timing-function:
-    var(--md-sys-motion-spring-default-effects),
-    var(--md-sys-motion-spring-fast-spatial);
+  transition-property: opacity, scale;
+  transition-duration: 150ms;
+  transition-timing-function: var(--md-sys-motion-easing-emphasized-decelerate);
   &[data-starting-style] {
     opacity: 0;
-    scale: 0.85;
+    scale: 0.9;
   }
   &[data-ending-style] {
     opacity: 0;
     scale: 0.95;
-    transition-duration: 150ms;
+    transition-duration: 100ms;
     transition-timing-function: var(
       --md-sys-motion-easing-emphasized-accelerate
     );
@@ -447,20 +444,16 @@
 @utility motion-menu {
   transform-origin: var(--transform-origin, top);
   transition-property: opacity, scale;
-  transition-duration:
-    var(--md-sys-motion-spring-fast-effects-duration),
-    var(--md-sys-motion-spring-default-spatial-duration);
-  transition-timing-function:
-    var(--md-sys-motion-spring-fast-effects),
-    var(--md-sys-motion-spring-default-spatial);
+  transition-duration: 180ms;
+  transition-timing-function: var(--md-sys-motion-easing-emphasized-decelerate);
   &[data-starting-style] {
     opacity: 0;
-    scale: 1 0.6;
+    scale: 1 0.8;
   }
   &[data-ending-style] {
     opacity: 0;
-    scale: 1 0.9;
-    transition-duration: 120ms;
+    scale: 1 0.95;
+    transition-duration: 100ms;
     transition-timing-function: var(
       --md-sys-motion-easing-emphasized-accelerate
     );
@@ -640,12 +633,14 @@
 
 /*
  * Press feedback on top of the M3E shape morph: the control squishes a little
- * while held and springs back. `--press-scale` sets the squish (default 0.97).
+ * while held and springs back. Popup triggers are left out so their popups
+ * don't jiggle. `--press-scale` sets the squish (default 0.97).
  * Needs transition-shape.
  */
 @utility press-bounce {
-  &:active:not(:disabled, [data-disabled]),
-  &[data-press] {
+  /* menu and popup triggers stay still: their popup is anchored to them */
+  &:active:not(:disabled, [data-disabled], [aria-haspopup]),
+  &[data-press]:not([aria-haspopup]) {
     scale: var(--press-scale, 0.97);
   }
 }
