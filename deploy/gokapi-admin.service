@@ -1,0 +1,17 @@
+[Unit]
+Description=Material 3 Expressive web UI for the private Gokapi
+After=network.target gokapi.service
+
+[Service]
+WorkingDirectory=%h/projects/_sandbox/gokapi-admin
+Environment=PATH=%h/.vite-plus/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOST=127.0.0.1
+Environment=PORT=53844
+Environment=GOKAPI_URL=http://127.0.0.1:53842
+ExecStart=%h/.vite-plus/bin/node server.mjs
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
