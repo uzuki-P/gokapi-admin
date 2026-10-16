@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import { Badge } from "@/components/m3e/badge"
 import { Button } from "@/components/m3e/button"
 import {
@@ -9,12 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/m3e/dropdown-menu"
 import { Icon } from "@/components/m3e/icon"
+import { LoadingIndicator } from "@/components/m3e/loading-indicator"
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "@/components/m3e/item"
 import { toast } from "@/components/m3e/toast"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/m3e/tooltip"
 import type { GokapiFile } from "@/lib/gokapi"
 import { downloadsText, expiryText, fileIcon } from "@/lib/format"
 
+import { useSession } from "./session"
 import { useThumbnail } from "./useThumbnail"
 
 async function copy(text: string, what: string) {
@@ -24,6 +28,31 @@ async function copy(text: string, what: string) {
   } catch {
     toast.add({ title: `Could not copy the ${what.toLowerCase()}`, type: "error" })
   }
+}
+
+// Saves the file through the API, so it skips the password prompt and does
+// not use up a download. End-to-end encrypted files would arrive as
+// ciphertext, so the row offers no direct download for them.
+function useDirectDownload(file: GokapiFile) {
+  const { client } = useSession()
+  const [busy, setBusy] = React.useState(false)
+  const start = React.useCallback(async () => {
+    setBusy(true)
+    try {
+      const blob = await client.download(file.Id)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = file.Name
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch (caught) {
+      toast.add({ title: "Could not download", description: caught instanceof Error ? caught.message : undefined, type: "error" })
+    } finally {
+      setBusy(false)
+    }
+  }, [client, file.Id, file.Name])
+  return { busy, start }
 }
 
 export function FileRow({
@@ -39,6 +68,7 @@ export function FileRow({
 }) {
   const hotlink = file.UrlHotlink || null
   const thumbnail = useThumbnail(file)
+  const download = useDirectDownload(file)
   return (
     <Item variant="segmented" className="bg-surface-container-low">
       <ItemMedia variant="image" className="bg-secondary-container text-on-secondary-container">
@@ -72,6 +102,24 @@ export function FileRow({
         </ItemDescription>
       </ItemContent>
       <ItemActions>
+        {!file.IsEndToEndEncrypted && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="tonal"
+                  size="icon"
+                  aria-label={`Download ${file.Name}`}
+                  disabled={download.busy}
+                  onClick={download.start}
+                >
+                  {download.busy ? <LoadingIndicator size={24} aria-label="Downloading" /> : <Icon name="download" />}
+                </Button>
+              }
+            />
+            <TooltipContent>Download</TooltipContent>
+          </Tooltip>
+        )}
         <Tooltip>
           <TooltipTrigger
             render={
