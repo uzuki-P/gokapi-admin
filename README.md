@@ -8,6 +8,26 @@ edit downloads, expiry, and password, and delete with undo.
 It is a separate app. Gokapi and its own `/admin` page keep working whether
 or not this app is installed or running.
 
+![The Files screen in light mode, showing the upload panel and four shared files](docs/screenshot-light.png)
+
+<details>
+<summary>Dark mode</summary>
+
+![The Files screen in dark mode](docs/screenshot-dark.png)
+
+</details>
+
+The screenshots use the mock Gokapi (`scripts/mock-gokapi.mjs`) and its
+dummy files. No real data is shown.
+
+> [!WARNING]
+> Keep this app on a private network such as a tailnet or a LAN. Don't
+> expose it to the public internet. The signed-in Gokapi API key is stored
+> in the browser's localStorage, so anyone who can run script on this origin
+> can read it. `/api` forwards straight to Gokapi, and `/devices` can create
+> and delete API keys for any key with API management. `server.mjs` listens
+> on loopback only. Put it behind a private reverse proxy, not a public one.
+
 ## How it works
 
 - React 19, Vite, Tailwind CSS v4, and shadcn-m3e components in
