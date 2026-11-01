@@ -10,7 +10,8 @@
     "start": "node server.mjs",
     "gen:icons": "node scripts/icons.mjs",
     "check:icons": "node scripts/icons.mjs --check",
-    "check": "pnpm lint && pnpm check:icons && pnpm build"
+    "test": "node --test scripts/test-devices.mjs",
+    "check": "pnpm lint && pnpm check:icons && pnpm test && pnpm build"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

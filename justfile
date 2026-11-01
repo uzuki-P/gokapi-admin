@@ -17,9 +17,13 @@ install-deps:
 build:
     pnpm build
 
-# Lint, check bundled icons, type-check, and build
+# Lint, check bundled icons, run the server tests, type-check, and build
 check:
     pnpm check
+
+# Run the /devices server tests against the mock Gokapi and fake Cloudflare KV
+test:
+    pnpm test
 
 # Regenerate the bundled Material Symbols after using a new icon
 icons:

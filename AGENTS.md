@@ -30,3 +30,15 @@ Use the justfile. `just check` must pass before finishing a change.
 - Run `just icons` after adding an icon name. Names built at runtime need a
   `// @icons ...` comment.
 - `server.mjs` has no dependencies and must stay on loopback.
+
+## Devices
+
+`devices.mjs` (served by `server.mjs` at `/devices`) is the web version of
+`~/docker/files/bin/pair` and must stay format-compatible with it. That
+covers the KV value, the `secrets/pairs.json` rows (jq's pretty print,
+atomic, 0600), and the pairing link that gokapi-android's `Pairing.kt`
+parses. Gokapi key calls use the caller's `apikey`, never a stored key, and
+KV is touched only after Gokapi has accepted one of them. Never log or store
+a pairing link, relay secret, API key, or the Cloudflare token. Test with
+`just test` against the mock and its fake KV. Don't pair or unpair against
+the real Gokapi or Cloudflare without the user's go-ahead.

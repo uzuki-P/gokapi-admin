@@ -27,7 +27,7 @@ export function QrDialog({
           <DialogTitle>Scan to download</DialogTitle>
           <DialogDescription className="break-all">{name}</DialogDescription>
         </DialogHeader>
-        {url && <QrCode value={url} />}
+        {url && <QrCode value={url} label="QR code for the download link" />}
         <DialogFooter>
           <Button variant="text" onClick={onClose}>
             Done
@@ -40,7 +40,15 @@ export function QrDialog({
 
 // Dark modules on a white tile in both themes: phone cameras read dark on
 // light most reliably.
-function QrCode({ value }: { value: string }) {
+export function QrCode({
+  value,
+  label,
+  className = "size-56",
+}: {
+  value: string
+  label: string
+  className?: string
+}) {
   const path = React.useMemo(() => {
     const { data, size } = encode(value, { ecc: "M", border: 0 })
     let d = ""
@@ -52,9 +60,9 @@ function QrCode({ value }: { value: string }) {
     <div className="mx-auto rounded-2xl bg-white p-4">
       <svg
         role="img"
-        aria-label="QR code for the download link"
+        aria-label={label}
         viewBox={`0 0 ${path.size} ${path.size}`}
-        className="size-56"
+        className={className}
         shapeRendering="crispEdges"
       >
         <path d={path.d} fill="#000" />

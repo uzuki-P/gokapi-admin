@@ -1,5 +1,6 @@
 // Serves the built app from dist/ and forwards /api/* to Gokapi on the same
-// origin, because Gokapi sends no CORS headers. No dependencies: run with
+// origin, because Gokapi sends no CORS headers. /devices pairs gokapi-android
+// devices with the relay (devices.mjs). No dependencies: run with
 // `node server.mjs`. Listens on loopback only; dev-route publishes it on the
 // tailnet.
 import { createReadStream } from "node:fs"
@@ -7,6 +8,8 @@ import { stat } from "node:fs/promises"
 import http from "node:http"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+
+import { handleDevices } from "./devices.mjs"
 
 const HOST = process.env.HOST ?? "127.0.0.1"
 const PORT = Number(process.env.PORT ?? 53844)
@@ -127,6 +130,8 @@ async function serveFile(req, res) {
 
 const server = http.createServer((req, res) => {
   if (req.url?.startsWith("/api/")) return forward(req, res)
+  if (req.url === "/devices" || req.url?.startsWith("/devices/"))
+    return void handleDevices(req, res, { gokapiUrl: GOKAPI })
   serveFile(req, res).catch(() => {
     if (!res.headersSent) res.writeHead(500)
     res.end()

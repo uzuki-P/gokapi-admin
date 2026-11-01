@@ -110,7 +110,7 @@ function useWindowDrop() {
   return over
 }
 
-export function FilesScreen() {
+export function FilesScreen({ onOpenDevices }: { onOpenDevices: () => void }) {
   const { client, signOut } = useSession()
   const { files, setFiles, error, refreshing, refresh } = useFiles()
   const [query, setQuery] = React.useState("")
@@ -185,6 +185,16 @@ export function FilesScreen() {
         }
         trailing={
           <>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button variant="ghost" size="icon" aria-label="Devices" onClick={onOpenDevices}>
+                    <Icon name="devices" />
+                  </Button>
+                }
+              />
+              <TooltipContent>Paired devices</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger
                 render={

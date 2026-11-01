@@ -43,11 +43,37 @@ export interface FileChanges {
 
 export class ApiError extends Error {
   readonly status: number
-  constructor(status: number, message: string) {
+  /** server.mjs's /devices error code, such as "no-api-mod" */
+  readonly code?: string
+  constructor(status: number, message: string, code?: string) {
     super(message)
     this.status = status
+    this.code = code
   }
 }
+
+/** A row of the pairs.json that server.mjs shares with bin/pair. No secrets. */
+export interface PairedDevice {
+  name: string
+  relayId: string
+  gokapiKeyId: string
+  /** ISO-8601 UTC */
+  created: string
+}
+
+export interface PairResult {
+  device: PairedDevice
+  /** The pairing link. A credential: show it once, never store it. */
+  link: string
+}
+
+export interface UnpairResult {
+  message: string
+  note: string
+  warnings: string[]
+}
+
+export const DEVICE_NAME = /^[a-z0-9][a-z0-9-]{0,31}$/
 
 const MIB = 1024 * 1024
 // Gokapi rejects chunks under 5 MB unless they are the last one.
@@ -88,6 +114,43 @@ export class GokapiClient {
       response.status,
       body?.ErrorMessage ?? `Gokapi answered ${response.status}.`
     )
+  }
+
+  // /devices is served by server.mjs, not Gokapi. It runs Gokapi's key
+  // operations with this key, so the key needs API management.
+  private async devicesRequest(path: string, init: RequestInit = {}): Promise<Response> {
+    let response: Response
+    try {
+      response = await fetch(path, {
+        ...init,
+        cache: "no-store",
+        headers: { apikey: this.key, ...init.headers },
+      })
+    } catch {
+      throw new ApiError(0, "Cannot reach the gokapi-admin server.")
+    }
+    if (response.ok) return response
+    const body = (await response.json().catch(() => null)) as { error?: string; code?: string } | null
+    throw new ApiError(response.status, body?.error ?? `The server answered ${response.status}.`, body?.code)
+  }
+
+  async devices(): Promise<PairedDevice[]> {
+    const response = await this.devicesRequest("/devices")
+    return ((await response.json()) as { devices: PairedDevice[] }).devices
+  }
+
+  async pairDevice(name: string): Promise<PairResult> {
+    const response = await this.devicesRequest("/devices", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name }),
+    })
+    return (await response.json()) as PairResult
+  }
+
+  async unpairDevice(name: string): Promise<UnpairResult> {
+    const response = await this.devicesRequest(`/devices/${encodeURIComponent(name)}`, { method: "DELETE" })
+    return (await response.json()) as UnpairResult
   }
 
   async list(): Promise<GokapiFile[]> {
